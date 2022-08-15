@@ -1,0 +1,72 @@
+# Installation
+# It requires python 3.6 version or heigher version python packageusing pip (pip3)
+$ pip install diagrams
+# SampleDiagram.py
+
+from diagrams import Diagram
+from diagrams.aws.compute import EC2
+from diagrams.aws.database import RDS
+from diagrams.aws.network import ELB
+
+#create diagram
+with Diagram("Web Service", show=False):
+    ELB("lb") >> EC2("web") >> RDS("userdb")
+# to run the above code in your terminal
+$ python SampleDiagram.py
+
+# output
+
+# Example Clustered web service Infrastructure
+
+#ClusterWebService.py
+
+from diagrams import Cluster, Diagram
+from diagrams.aws.compute import ECS, Lambda
+from diagrams.aws.database import ElastiCache, RDS
+from diagrams.aws.network import ELB, Route53
+from diagrams.aws.integration import SQS
+from diagrams.aws.storage import S3
+
+#create diagram
+with Diagram("Clustered Web Services", show=False):
+    # route53  
+    dns = Route53("dns")
+
+    #Elastic load balancer
+    lb = ELB("App load balancer")
+
+    #Elastic containe service cluster
+    with Cluster("Services"):
+        svc_group = [ECS("service1"),
+                     ECS("service2"),
+                     ECS("service3")]
+
+    #Simple queue service
+    queue = SQS("SQS service")
+
+    #Relational Database service db cluster
+    with Cluster("RDS DB Cluster"):
+        db_primary = RDS("userdb")
+        db_primary - [RDS("backup")]
+
+    #lambda functions cluster
+    with Cluster("Lambdas"):
+      handlers = [
+          Lambda('Lambda 1'),
+          Lambda('Lambda 2'),
+          Lambda('Lambda 3'),
+      ]
+
+    #Elasticcache service
+    memcached = ElastiCache("memcached")
+
+    # S3 serive
+    store = S3("File storage")
+
+    #architecture work flow
+    dns >> lb >> svc_group >> queue >> handlers
+    handlers[0] >> memcached
+    handlers[1] >> store
+    handlers[2] >> db_primary
+# to run the code
+$ python ClusterWebService.py
